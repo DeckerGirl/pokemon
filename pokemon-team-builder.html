@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pokémon Team Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #e3350d;
+      --dark: #1a1a2e;
+      --darker: #0f0f1a;
+      --gold: #f7d02c;
+      --blue: #4a90d9;
+      --light: #f8f8f8;
+      --card-bg: #16213e;
+      --border: #0f3460;
+      --text: #e0e0e0;
+      --muted: #7a8399;
+      --type-normal: #a8a878; --type-fire: #f08030; --type-water: #6890f0;
+      --type-grass: #78c850; --type-electric: #f8d030; --type-ice: #98d8d8;
+      --type-fighting: #c03028; --type-poison: #a040a0; --type-ground: #e0c068;
+      --type-flying: #a890f0; --type-psychic: #f85888; --type-bug: #a8b820;
+      --type-rock: #b8a038; --type-ghost: #705898; --type-dragon: #7038f8;
+      --type-dark: #705848; --type-steel: #b8b8d0; --type-fairy: #ee99ac;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--darker);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(74,144,217,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(227,53,13,0.07) 0%, transparent 60%);
+    }
+
+    header {
+      background: var(--dark);
+      border-bottom: 3px solid var(--red);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(227,53,13,0.2);
+    }
+    .pokeball-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(180deg, var(--red) 50%, white 50%);
+      border-radius: 50%;
+      border: 3px solid #333;
+      position: relative;
+      flex-shrink: 0;
+      animation: spin-in 0.6s ease-out;
+    }
+    .pokeball-icon::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 12px; height: 12px;
+      background: white;
+      border-radius: 50%;
+      border: 3px solid #333;
+    }
+    .pokeball-icon::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      height: 3px;
+      background: #333;
+      transform: translateY(-50%);
+    }
+    @keyframes spin-in { from { transform: rotate(-360deg); } to { transform: rotate(0); } }
+    header h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1rem;
+      color: var(--gold);
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+      letter-spacing: 0.5px;
+    }
+    header h1 span { color: var(--red); }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+    /* Search Section */
+    .search-section {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .search-section h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+    .search-row {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+    .search-row input {
+      flex: 1;
+      background: var(--darker);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .search-row input:focus { border-color: var(--blue); }
+    .search-row input::placeholder { color: var(--muted); font-weight: 600; }
+    button {
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      transition: all 0.15s;
+    }
+    .btn-search {
+      background: var(--red);
+      color: white;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 0 #8b1f07;
+    }
+    .btn-search:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #8b1f07; }
+    .btn-search:active { transform: translateY(2px); box-shadow: 0 2px 0 #8b1f07; }
+    .btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Pokemon Info Panel */
+    .pokemon-panel {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 2rem;
+      display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      animation: fade-up 0.4s ease-out;
+    }
+    .pokemon-panel.visible { display: block; }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .pokemon-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .pokemon-img-wrap {
+      background: var(--darker);
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 160px;
+      height: 160px;
+      flex-shrink: 0;
+    }
+    .pokemon-img-wrap img {
+      width: 128px;
+      height: 128px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+    }
+    .pokemon-info { flex: 1; }
+    .pokemon-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.1rem;
+      color: white;
+      text-transform: capitalize;
+      margin-bottom: 0.4rem;
+    }
+    .pokemon-num {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    .types { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .type-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+    .sound-btn {
+      background: var(--blue);
+      color: white;
+      font-size: 0.85rem;
+      padding: 0.5rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 3px 0 #2a5fa0;
+    }
+    .sound-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 #2a5fa0; }
+    .sound-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #2a5fa0; }
+
+    /* Moves Section */
+    .moves-section { margin-top: 1.2rem; }
+    .moves-section h3 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+    .moves-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.8rem;
+    }
+    .move-slot label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.3rem;
+    }
+    .move-slot select {
+      width: 100%;
+      background: var(--darker);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      text-transform: capitalize;
+    }
+    .move-slot select:focus { border-color: var(--gold); }
+    .move-slot select option { background: var(--dark); text-transform: capitalize; }
+
+    .add-btn {
+      margin-top: 1.5rem;
+      background: var(--gold);
+      color: #1a1a0a;
+      font-size: 0.9rem;
+      padding: 0.75rem 2rem;
+      box-shadow: 0 4px 0 #b89800;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.6rem;
+    }
+    .add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #b89800; }
+    .add-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b89800; }
+    .add-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Team Section */
+    .team-section { margin-top: 2rem; }
+    .team-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .team-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.75rem;
+      color: var(--gold);
+    }
+    .team-count {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .team-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      animation: fade-up 0.3s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+    .team-card::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.02);
+      border: 20px solid rgba(255,255,255,0.03);
+    }
+    .team-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+    .team-card img {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .team-card-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.7rem;
+      text-transform: capitalize;
+      color: white;
+      margin-bottom: 0.3rem;
+    }
+    .team-card-moves {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+    .team-move {
+      background: var(--darker);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: capitalize;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .remove-btn {
+      position: absolute;
+      top: 0.7rem; right: 0.7rem;
+      background: rgba(227,53,13,0.15);
+      color: var(--red);
+      border: 1px solid rgba(227,53,13,0.3);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      transition: all 0.15s;
+    }
+    .remove-btn:hover { background: var(--red); color: white; }
+
+    .empty-team {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+    }
+    .empty-team .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 0.8rem;
+      opacity: 0.4;
+    }
+    .empty-team p { font-weight: 700; font-size: 0.9rem; }
+
+    .error-msg {
+      background: rgba(227,53,13,0.1);
+      border: 2px solid rgba(227,53,13,0.3);
+      border-radius: 10px;
+      padding: 0.8rem 1.2rem;
+      color: #ff6b4a;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-top: 0.8rem;
+      display: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { display: none; align-items: center; color: var(--muted); font-weight: 700; font-size: 0.9rem; margin-top: 0.8rem; }
+    .loading-text.show { display: flex; }
+
+    .team-full-notice {
+      background: rgba(247,208,44,0.1);
+      border: 2px solid rgba(247,208,44,0.3);
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .team-full-notice.show { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="pokeball-icon"></div>
+  <h1>Pokémon <span>Team</span> Builder</h1>
+</header>
+
+<main>
+  <!-- Search -->
+  <div class="search-section">
+    <h2>Find a Pokémon</h2>
+    <div class="search-row">
+      <input type="text" id="pokemon-input" placeholder="Enter name or ID (e.g. pikachu or 25)" autocomplete="off" />
+      <button class="btn-search" id="search-btn" onclick="searchPokemon()">Search</button>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
+    <div class="loading-text" id="loading">
+      <span class="spinner"></span> Loading Pokémon data...
+    </div>
+  </div>
+
+  <!-- Pokemon Info Panel -->
+  <div class="pokemon-panel" id="pokemon-panel">
+    <div class="pokemon-header">
+      <div class="pokemon-img-wrap">
+        <img id="pokemon-img" src="" alt="Pokemon" />
+      </div>
+      <div class="pokemon-info">
+        <div class="pokemon-name" id="pokemon-name"></div>
+        <div class="pokemon-num" id="pokemon-num"></div>
+        <div class="types" id="pokemon-types"></div>
+        <button class="sound-btn" id="sound-btn" onclick="playSound()">🔊 Play Cry</button>
+      </div>
+    </div>
+
+    <div class="moves-section">
+      <h3>Select Moves</h3>
+      <div class="moves-grid">
+        <div class="move-slot">
+          <label>Move 1</label>
+          <select id="move-1"><option value="">— Select Move —</option></select>
+        </div>
+        <div class="move-slot">
+          <label>Move 2</label>
+          <select id="move-2"><option value="">— Select Move —</option></select>
+        </div>
+        <div class="move-slot">
+          <label>Move 3</label>
+          <select id="move-3"><option value="">— Select Move —</option></select>
+        </div>
+        <div class="move-slot">
+          <label>Move 4</label>
+          <select id="move-4"><option value="">— Select Move —</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:1.5rem;">
+      <button class="add-btn" id="add-btn" onclick="addToTeam()">+ Add to Team</button>
+      <div class="team-full-notice" id="team-full-notice">Your team is full! (6/6)</div>
+    </div>
+  </div>
+
+  <!-- Team -->
+  <div class="team-section">
+    <div class="team-header">
+      <div class="team-title">Your Team</div>
+      <div class="team-count" id="team-count">0 / 6</div>
+    </div>
+    <div class="team-grid" id="team-grid">
+      <div class="empty-team">
+        <div class="empty-icon">⚪</div>
+        <p>Your team is empty. Search for a Pokémon to get started!</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<audio id="pokemon-audio" preload="none"></audio>
+
+<script>
+  const cache = {};
+  let currentPokemon = null;
+  let team = [];
+
+  const input = document.getElementById('pokemon-input');
+  const panel = document.getElementById('pokemon-panel');
+  const errorMsg = document.getElementById('error-msg');
+  const loading = document.getElementById('loading');
+  const searchBtn = document.getElementById('search-btn');
+  const addBtn = document.getElementById('add-btn');
+  const audio = document.getElementById('pokemon-audio');
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') searchPokemon(); });
+
+  async function searchPokemon() {
+    const query = input.value.trim().toLowerCase();
+    if (!query) return;
+
+    showError('');
+    loading.classList.add('show');
+    searchBtn.disabled = true;
+    panel.classList.remove('visible');
+
+    try {
+      let data;
+      if (cache[query]) {
+        data = cache[query];
+      } else {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${query}`);
+        if (!res.ok) throw new Error(`Pokémon "${query}" not found.`);
+        data = await res.json();
+        cache[query] = data;
+        // also cache by id
+        cache[data.id] = data;
+        cache[data.name] = data;
+      }
+      currentPokemon = data;
+      renderPokemon(data);
+    } catch (err) {
+      showError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      loading.classList.remove('show');
+      searchBtn.disabled = false;
+    }
+  }
+
+  function renderPokemon(data) {
+    // Image
+    const img = document.getElementById('pokemon-img');
+    img.src = data.sprites?.other?.['official-artwork']?.front_default
+           || data.sprites?.front_default
+           || '';
+    img.alt = data.name;
+
+    // Name & ID
+    document.getElementById('pokemon-name').textContent = data.name;
+    document.getElementById('pokemon-num').textContent = `#${String(data.id).padStart(3,'0')}`;
+
+    // Types
+    const typesEl = document.getElementById('pokemon-types');
+    typesEl.innerHTML = '';
+    data.types.forEach(t => {
+      const badge = document.createElement('span');
+      badge.className = 'type-badge';
+      badge.textContent = t.type.name;
+      badge.style.background = `var(--type-${t.type.name}, #888)`;
+      typesEl.appendChild(badge);
+    });
+
+    // Sound
+    const cry = data.cries?.latest || data.cries?.legacy;
+    if (cry) {
+      audio.src = cry;
+    } else {
+      document.getElementById('sound-btn').disabled = true;
+    }
+
+    // Moves - populate all 4 dropdowns
+    const moves = data.moves.map(m => m.move.name);
+    ['move-1','move-2','move-3','move-4'].forEach(id => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">— Select Move —</option>';
+      moves.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m.replace(/-/g, ' ');
+        sel.appendChild(opt);
+      });
+    });
+
+    // Check team full
+    updateAddBtn();
+    panel.classList.add('visible');
+  }
+
+  function playSound() {
+    if (audio.src) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+  }
+
+  function addToTeam() {
+    if (!currentPokemon || team.length >= 6) return;
+
+    const moves = [
+      document.getElementById('move-1').value || '—',
+      document.getElementById('move-2').value || '—',
+      document.getElementById('move-3').value || '—',
+      document.getElementById('move-4').value || '—',
+    ];
+
+    team.push({
+      id: currentPokemon.id,
+      name: currentPokemon.name,
+      image: currentPokemon.sprites?.other?.['official-artwork']?.front_default
+          || currentPokemon.sprites?.front_default || '',
+      types: currentPokemon.types.map(t => t.type.name),
+      moves,
+    });
+
+    renderTeam();
+    updateAddBtn();
+  }
+
+  function removeFromTeam(index) {
+    team.splice(index, 1);
+    renderTeam();
+    updateAddBtn();
+  }
+
+  function renderTeam() {
+    const grid = document.getElementById('team-grid');
+    document.getElementById('team-count').textContent = `${team.length} / 6`;
+
+    if (team.length === 0) {
+      grid.innerHTML = `<div class="empty-team"><div class="empty-icon">⚪</div><p>Your team is empty. Search for a Pokémon to get started!</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = '';
+    team.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'team-card';
+      card.innerHTML = `
+        <button class="remove-btn" onclick="removeFromTeam(${i})">✕</button>
+        <div class="team-card-header">
+          <img src="${p.image}" alt="${p.name}" />
+          <div>
+            <div class="team-card-name">${p.name}</div>
+            <div class="types" style="margin:0.3rem 0 0">
+              ${p.types.map(t => `<span class="type-badge" style="background:var(--type-${t},#888);font-size:0.65rem;padding:0.2rem 0.5rem">${t}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="team-card-moves">
+          ${p.moves.map(m => `<div class="team-move">${m.replace(/-/g,' ')}</div>`).join('')}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function updateAddBtn() {
+    const full = team.length >= 6;
+    addBtn.disabled = full;
+    const notice = document.getElementById('team-full-notice');
+    notice.classList.toggle('show', full);
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.style.display = msg ? 'block' : 'none';
+  }
+</script>
+</body>
+</html>
